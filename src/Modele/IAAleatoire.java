@@ -33,24 +33,25 @@ import Structures.Sequence;
 //import Modele.Graph;
 //import Modele.Dijkstra;
 import java.util.List;
-import java.util.Random;
 class IAAleatoire extends IA {
-	Random r;
-	// Couleurs au format RGB (rouge, vert, bleu, un octet par couleur)
-	final static int VERT = 0x00CC00;
-	final static int MARRON = 0xBB7755;
+	List<Node> cheminCaisse;
+    int avance;
+    int row;
+    int col;
+    int caisseL;
+    int caisseC;
+    int ButC;
+    int ButL;
+    boolean bool;
+    Niveau niveau;
+    int ArriveL;
+    int ArriveC;
 
-	public IAAleatoire() {
-		r = new Random();
-	}
- 
-	@Override
-    public Sequence<Coup> joue() {
-        Sequence<Coup> resultat = Configuration.nouvelleSequence();
-
-        // Trouver la position de la caisse
-        int caisseL = -1;
-        int caisseC = -1;
+    
+	public IAAleatoire(Niveau niv) {
+        caisseL = -1;
+        caisseC = -1;
+        niveau=niv;
         for (int i = 0; i < niveau.lignes(); i++) {
             for (int j = 0; j < niveau.colonnes(); j++) {
                 if (niveau.aCaisse(i, j)) {
@@ -63,17 +64,86 @@ class IAAleatoire extends IA {
                 break;
             }
         }
+        ButL = -1;
+        ButC = -1;
+        for (int i = 0; i < niveau.lignes(); i++) {
+            for (int j = 0; j < niveau.colonnes(); j++) {
+                if (niveau.aBut(i, j)) {
+                    ButL = i;
+                    ButC = j;
+                    break;
+                }
+            }
+            if (ButL != -1) {
+                break;
+            }
+        }
+		Graph niv1 =new Graph();
+	    niv1 =Utilitaire.convertToGraphCaisse(niveau);
+        cheminCaisse = Dijkstra.shortestPath(niv1, new Node(caisseL, caisseC), new Node(ButL, ButC));
+        avance=1;
+        bool=true;
+        ArriveC=-1;
+        ArriveL=-1;
+	}
+ 
+	@Override
+    public Sequence<Coup> joue() {
+        Sequence<Coup> resultat = Configuration.nouvelleSequence();
+        if(niveau.pousseurC==ArriveC && niveau.pousseurL==ArriveL){
+            bool=true;
+            avance++;
+            Coup coup = niveau.deplace(0, 1);
+            caisseC=caisseC+1;
+            if (coup != null) {
+                resultat.insereQueue(coup);
+            }
 
-        // Trouver la position actuelle du joueur
-        int joueurL = niveau.lignePousseur();
-        int joueurC = niveau.colonnePousseur();
-		Graph niv =new Graph();
-		niv =Utilitaire.convertToGraph(niveau);
-        // Calculer le chemin le plus court entre le joueur et la caisse en utilisant Dijkstra
-        List<Node> chemin = Dijkstra.shortestPath(niv, new Node(joueurL, joueurC), new Node(caisseL-1, caisseC-1));
-		
-        // Déplacer le joueur vers la position adjacente à la caisse selon le chemin calculé
-        if (chemin.size() > 1) { // Assurez-vous qu'il y a un chemin valide trouvé
+        }
+        if(bool){
+            Node nextNode = cheminCaisse.get(avance);
+            row=nextNode.row;
+            col=nextNode.col;
+            System.out.println("row:"+row+" col: "+col);
+            System.out.println("row:"+caisseL+" col: "+caisseC);
+            bool=false;
+        }
+        if(!(niveau.pousseurC==ArriveC && niveau.pousseurL==ArriveL)){
+        if(caisseL>row){
+            DeplaceJoueur(niveau,caisseL-1, caisseC,resultat);
+            System.out.println("Un:");
+            ArriveC=caisseC;
+            ArriveL=caisseL-1;
+        }
+        else if (caisseL<row){
+            DeplaceJoueur(niveau,caisseL+1, caisseC,resultat);
+            System.out.println("Deux:");
+            ArriveC=caisseC;
+            ArriveL=caisseL+1;
+        }
+        else if (caisseC>col){
+            DeplaceJoueur(niveau,caisseL, caisseC+1,resultat);
+            System.out.println("Trois:");
+            ArriveC=caisseC+1;
+            ArriveL=caisseL;
+        }
+        else if (caisseC<col){
+            DeplaceJoueur(niveau,caisseL, caisseC-1,resultat);
+            System.out.println("Quatre:");
+            ArriveC=caisseC-1;
+            ArriveL=caisseL;
+        }
+    }
+        return resultat;
+    } 
+
+private void DeplaceJoueur(Niveau niveau,int destL, int destC, Sequence<Coup> resultat){
+    int joueurL = niveau.lignePousseur();
+    int joueurC = niveau.colonnePousseur();
+	Graph niv =new Graph();
+	niv =Utilitaire.convertToGraph(niveau);
+    List<Node> chemin = Dijkstra.shortestPath(niv, new Node(joueurL, joueurC), new Node(destL, destC));
+    if (chemin.size() > 1) { // Assurez-vous qu'il y a un chemin valide trouvé
             // Trouver le prochain nœud dans le chemin (la position adjacente à la caisse)
             Node nextNode = chemin.get(1);
             int dLig = nextNode.row - joueurL;
@@ -86,12 +156,7 @@ class IAAleatoire extends IA {
             if (coup != null) {
                 resultat.insereQueue(coup);
             }
-        }
-
-        return resultat;
     }
-
-	
-	 
- }
+}
+}
  

@@ -36,20 +36,9 @@ public abstract class IA {
 	public static IA nouvelle(Jeu j) {
 		IA resultat = null;
 		// Méthode de fabrication pour l'IA, qui crée le bon objet selon la config
-		String type = Configuration.lisChaine("IA");
-		switch (type) {
-			case "Aleatoire":
-				resultat = new IAAleatoire();
-				break;
-			case "Teleportations":
-				resultat = new IATeleportations();
-				break;
-			case "ParcoursFixe":
-				resultat = new IAParcoursFixe();
-				break;
-			default:
-				Configuration.erreur("IA de type " + type + " non supportée");
-		}
+		Niveau niv = j.niveau().clone(); 
+		resultat = new IAAleatoire(niv);
+			
 		if (resultat != null) {
 			resultat.jeu = j;
 		}
