@@ -90,11 +90,28 @@ class IAAleatoire extends IA {
 	@Override
     public Sequence<Coup> joue() {
         Sequence<Coup> resultat = Configuration.nouvelleSequence();
+        
         if(niveau.pousseurC==ArriveC && niveau.pousseurL==ArriveL){
             bool=true;
             avance++;
-            Coup coup = niveau.deplace(0, 1);
-            caisseC=caisseC+1;
+            Coup coup=null;
+            
+            if(caisseL>row){
+                coup = niveau.deplace(-1, 0);
+                caisseL=caisseL-1;
+            }
+            else if (caisseL<row){
+                coup = niveau.deplace(1,0 );
+                caisseL=caisseL+1;
+            }
+            else if (caisseC>col){
+                coup = niveau.deplace(0, -1);
+                caisseC=caisseC-1;
+            }
+            else if (caisseC<col){
+                coup = niveau.deplace(0, 1);
+                caisseC=caisseC+1;
+            }
             if (coup != null) {
                 resultat.insereQueue(coup);
             }
@@ -104,38 +121,66 @@ class IAAleatoire extends IA {
             Node nextNode = cheminCaisse.get(avance);
             row=nextNode.row;
             col=nextNode.col;
-            System.out.println("row:"+row+" col: "+col);
-            System.out.println("row:"+caisseL+" col: "+caisseC);
             bool=false;
+            if(caisseL>row){
+                ArriveC=caisseC;
+                ArriveL=caisseL+1;
+            }
+            else if (caisseL<row){
+                ArriveC=caisseC;
+                ArriveL=caisseL-1;
+            }
+            else if (caisseC>col){
+                ArriveC=caisseC+1;
+                ArriveL=caisseL;
+            }
+            else if (caisseC<col){
+                ArriveC=caisseC-1;
+                ArriveL=caisseL;
+            }
         }
         if(!(niveau.pousseurC==ArriveC && niveau.pousseurL==ArriveL)){
         if(caisseL>row){
-            DeplaceJoueur(niveau,caisseL-1, caisseC,resultat);
-            System.out.println("Un:");
-            ArriveC=caisseC;
-            ArriveL=caisseL-1;
+            DeplaceJoueur(niveau,caisseL+1, caisseC,resultat);
+            
         }
         else if (caisseL<row){
-            DeplaceJoueur(niveau,caisseL+1, caisseC,resultat);
-            System.out.println("Deux:");
-            ArriveC=caisseC;
-            ArriveL=caisseL+1;
+            DeplaceJoueur(niveau,caisseL-1, caisseC,resultat);
+            
         }
         else if (caisseC>col){
             DeplaceJoueur(niveau,caisseL, caisseC+1,resultat);
-            System.out.println("Trois:");
-            ArriveC=caisseC+1;
-            ArriveL=caisseL;
+           
         }
         else if (caisseC<col){
             DeplaceJoueur(niveau,caisseL, caisseC-1,resultat);
-            System.out.println("Quatre:");
-            ArriveC=caisseC-1;
-            ArriveL=caisseL;
+            
+        }
+    }
+    if(avance==cheminCaisse.size()-1){
+        Coup coup=null;
+        if(caisseL>row){
+            coup = niveau.deplace(-1, 0);
+        
+        }
+        else if (caisseL<row){
+            coup = niveau.deplace(1,0 );
+            
+        }
+        else if (caisseC>col){
+            coup = niveau.deplace(0, -1);
+            
+        }
+        else if (caisseC<col){
+            coup = niveau.deplace(0, 1);
+            
+        }
+        if (coup != null) {
+            resultat.insereQueue(coup);
         }
     }
         return resultat;
-    } 
+} 
 
 private void DeplaceJoueur(Niveau niveau,int destL, int destC, Sequence<Coup> resultat){
     int joueurL = niveau.lignePousseur();
